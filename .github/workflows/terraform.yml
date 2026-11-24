@@ -1,40 +1,37 @@
-name: Terraform Format and Validate
+name: GitOps Infra Deployment
 
 on:
-  push:
-    branches:
-      - main
-      - develop
   pull_request:
     branches:
       - main
 
+  push:
+    branches:
+      - main
+
 jobs:
-  terraform:
+  terraform-plan:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: latest
+      - uses: actions/checkout@v4
 
-      - name: Terraform Init
-        run: terraform init
-      
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
-        continue-on-error: true
-      
-      - name: Terraform Validate
-        run: terraform validate
+      - uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Plan
-        run: terraform plan
-      
+      - run: terraform init
 
+      - run: terraform plan
 
-        
+  terraform-apply:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - run: terraform init
+
+      - run: terraform apply -auto-approve
